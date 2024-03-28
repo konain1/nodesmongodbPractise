@@ -45,6 +45,18 @@ async function SignupMidlleware(req, res, next) {
     }
 }
 
+async function updateTeamMiddleware(req,res,next){
+
+    let team = req.body.team;
+
+    const teamMembers = await Shinobi.find({ team: team }); // Find all members in the team
+
+    if (teamMembers.length < 3) {
+        next(); // Proceed to signup if there's space
+    } else {
+        res.json({ msg: 'Members list is full' });
+    }
+}
 
 mongoose.connect('mongodb+srv://konain7:Kaunain%4099@cluster0.rmyvhx6.mongodb.net/leafvillage')
 .then(()=>console.log('leaf village connected now'))
@@ -88,7 +100,7 @@ let ninjas = await Shinobi.find()
 res.json({ninjas:ninjas.map((ninja)=>ninja.ninjaName)})
 })
 
-app.put('/updateTeam',async(req,res)=>{
+app.put('/updateTeam',updateTeamMiddleware,async(req,res)=>{
     let team = req.body.team;
     let ninja = req.body.ninja
 
@@ -97,4 +109,4 @@ app.put('/updateTeam',async(req,res)=>{
     res.json({msg: `${ninja} join  Team ${team}`})
 
 })
-app.listen(3090)
+app.listen(3090)    
