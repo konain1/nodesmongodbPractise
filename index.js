@@ -5,24 +5,26 @@ const app = express();
 
 
 
-async function middleware(req,res,next){
+async function middlewareDelete(req,res,next){
     let username  = req.body.username
     let team = req.body.team
 
     const ninjaExist = await Shinobi.findOne({ninjaName:username})
-    const time = await Shinobi.findOne({ninjaName:username})
-
+    // const time = await Shinobi.findOne({ninjaName:username})
+    
     // console.log(time.createdAt.getHours() + ' ' + time.createdAt.getMinutes())
 
 
 
-    if(ninjaExist){
+    if(ninjaExist && ninjaExist.team == team){
         
-        return res.json({warning:'Ninja already Exist choose another username'})
+        if(username  && team){
+            return   next()
+          }
+    }else{
+        res.json({msg:`ninja does not exits or wrong team id`})
     }
-    if(username  && team){
-      return   next()
-    }
+    
 
     
    return  res.json({warning:'you missed the username or team'})
@@ -30,17 +32,26 @@ async function middleware(req,res,next){
 
 async function SignupMidlleware(req, res, next) {
     let currentTeam = req.body.team;
+    let username  = req.body.username
+
 
     try {
-        const teamMembers = await Shinobi.find({ team: currentTeam }); // Find all members in the team
+        const ninjaExist = await Shinobi.findOne({ninjaName:username})
+
+        const teamMembers = await Shinobi.find({ team: currentTeam });
+
+        if(ninjaExist){
+        
+            return res.json({warning:'Ninja already Exist choose another username'})
+        }
 
         if (teamMembers.length < 3) {
-            next(); // Proceed to signup if there's space
+            next(); 
         } else {
             res.json({ msg: 'Members list is full' });
         }
     } catch (error) {
-        console.error(error); // Handle errors
+        console.error(error); 
         res.status(500).json({ msg: 'Internal server error' });
     }
 }
@@ -49,11 +60,15 @@ async function updateTeamMiddleware(req,res,next){
 
     let team = req.body.team;
 
-    const teamMembers = await Shinobi.find({ team: team }); // Find all members in the team
+    const teamMembers = await Shinobi.find({ team: team }); 
 
+  
+    
     if (teamMembers.length < 3) {
-        next(); // Proceed to signup if there's space
+        console.log(teamMembers.length)
+        next(); 
     } else {
+        console.log(teamMembers.length)
         res.json({ msg: 'Members list is full' });
     }
 }
@@ -84,7 +99,7 @@ app.use(express.json())
 
 
 
-app.post('/signup',middleware,SignupMidlleware ,async(req,res)=>{
+app.post('/signup',SignupMidlleware ,async(req,res)=>{
  
 
     let team  = req.body.team;
@@ -104,8 +119,21 @@ app.put('/updateTeam',updateTeamMiddleware,async(req,res)=>{
     let team = req.body.team;
     let ninja = req.body.ninja
 
-    teamUpdata = await Shinobi.findOneAndUpdate({ ninjaName: {ninja} }, { $set: { team:team} });
+    teamUpdata = await Shinobi.findOneAndUpdate({ ninjaName: ninja }, { $set: { team:team} });
     res.json({msg: `${ninja} join  Team ${team}`})
+
+})
+
+app.delete('/delete',middlewareDelete,async(req,res)=>{
+
+    let ninja = req.body.username;
+    let team = req.body.team
+
+    let ninjaExist = await Shinobi.findOneAndDelete({ninjaName:ninja})
+
+    res.json({msg:`${ninja} has been  removed`})
+
+
 
 })
 app.listen(3090)    
