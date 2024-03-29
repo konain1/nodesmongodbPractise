@@ -105,7 +105,6 @@ app.put('/updateTeam',updateTeamMiddleware,async(req,res)=>{
     let ninja = req.body.ninja
 
     teamUpdata = await Shinobi.findOneAndUpdate({ ninjaName: {ninja} }, { $set: { team:team} });
-    console.log(teamupdata)
     res.json({msg: `${ninja} join  Team ${team}`})
 
 })
